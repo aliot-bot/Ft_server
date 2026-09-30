@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>КАНАТЕЛЛО — BOSS FIGHT</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at center, #351010 0%, #120505 45%, #000 100%);
+    color: white;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+
+.game {
+    height: 100vh;
+    padding: 12px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.boss-label {
+    font-weight: bold;
+    letter-spacing: 6px;
+    opacity: 0.7;
+    font-size: 14px;
+}
+
+h1 {
+    font-family: Impact, Arial, sans-serif;
+    font-size: clamp(40px, 7vw, 75px);
+    line-height: 1;
+    margin: 5px 0 8px;
+
+    background: linear-gradient(#fff4a0, #ffb300, #ff3300);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* =========================
+   HP
+========================= */
+
+.hp-wrapper {
+    width: min(650px, 90vw);
+    margin-bottom: 10px;
+}
+
+.hp-text {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.hp-bar {
+    height: 24px;
+    background: #280000;
+    border: 2px solid white;
+    border-radius: 7px;
+    overflow: hidden;
+}
+
+#hp {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        #9d0000,
+        #ff3030
+    );
+
+    transition: width 0.25s;
+}
+
+/* =========================
+   АРЕНА
+========================= */
+
+.arena {
+    position: relative;
+
+    width: min(900px, 94vw);
+    flex: 1;
+    min-height: 250px;
+
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 15px;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(120,0,0,0.25),
+            rgba(0,0,0,0.5)
+        );
+
+    overflow: hidden;
+}
+
+/* =========================
+   КАНАТЕЛЛО
+========================= */
+
+#boss {
+    position: absolute;
+
+    width: clamp(120px, 18vw, 210px);
+    height: clamp(150px, 24vw, 270px);
+
+    object-fit: cover;
+    object-position: center;
+
+    border-radius: 15px;
+    border: 4px solid #ffb300;
+
+    box-shadow:
+        0 0 20px rgba(255, 100, 0, 0.8);
+
+    cursor: crosshair;
+
+    user-select: none;
+    -webkit-user-drag: none;
+
+    left: 50%;
+    top: 50%;
+
+    transform: translate(-50%, -50%);
+}
+
+/* попадание */
+
+#boss.hit {
+    filter:
+        brightness(2)
+        saturate(2);
+}
+
+/* смерть */
+
+#boss.dead {
+    filter: grayscale(1) brightness(0.5);
+
+    transform:
+        translate(-50%, -50%)
+        rotate(8deg);
+
+    transition: filter 0.5s;
+}
+
+/* =========================
+   DAMAGE
+========================= */
+
+.damage {
+    position: absolute;
+
+    font-family: Impact, Arial, sans-serif;
+    font-size: 38px;
+
+    color: #ff3333;
+
+    text-shadow:
+        2px 2px 0 black,
+        -2px -2px 0 black;
+
+    pointer-events: none;
+
+    animation: damageFly 0.8s forwards;
+
+    z-index: 10;
+}
+
+@keyframes damageFly {
+
+    0% {
+        transform:
+            translate(-50%, 0)
+            scale(0.7);
+
+        opacity: 1;
+    }
+
+    40% {
+        transform:
+            translate(-50%, -35px)
+            scale(1.3);
+    }
+
+    100% {
+        transform:
+            translate(-50%, -80px)
+            scale(1);
+
+        opacity: 0;
+    }
+}
+
+/* =========================
+   ПЛЕТКА
+========================= */
+
+#whip {
+    position: fixed;
+
+    font-size: 65px;
+
+    pointer-events: none;
+
+    opacity: 0;
+
+    z-index: 1000;
+}
+
+#whip.attack {
+    animation: whipAttack 0.25s;
+}
+
+@keyframes whipAttack {
+
+    0% {
+        opacity: 1;
+
+        transform:
+            translate(-50%, -50%)
+            rotate(-80deg)
+            scale(1.3);
+    }
+
+    50% {
+        opacity: 1;
+
+        transform:
+            translate(-50%, -50%)
+            rotate(30deg)
+            scale(1);
+    }
+
+    100% {
+        opacity: 0;
+
+        transform:
+            translate(-50%, -50%)
+            rotate(60deg)
+            scale(0.8);
+    }
+}
+
+/* =========================
+   НИЖНЯЯ ПАНЕЛЬ
+========================= */
+
+.bottom {
+    flex-shrink: 0;
+
+    min-height: 85px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#message {
+    font-family: Impact, Arial, sans-serif;
+
+    font-size: clamp(18px, 3vw, 27px);
+
+    margin: 7px 0;
+
+    min-height: 30px;
+}
+
+button {
+    border: none;
+
+    padding: 10px 20px;
+
+    border-radius: 9px;
+
+    background: #ffb300;
+
+    font-size: 15px;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+button:hover {
+    background: #ffd000;
+    transform: scale(1.05);
+}
+
+/* =========================
+   SCREEN SHAKE
+========================= */
+
+.shake {
+    animation: shake 0.18s;
+}
+
+@keyframes shake {
+
+    0% {
+        transform: translate(0);
+    }
+
+    25% {
+        transform: translate(-6px, 3px);
+    }
+
+    50% {
+        transform: translate(6px, -3px);
+    }
+
+    75% {
+        transform: translate(-4px, -2px);
+    }
+
+    100% {
+        transform: translate(0);
+    }
+}
+
+/* маленькие экраны */
+
+@media (max-height: 650px) {
+
+    h1 {
+        font-size: 38px;
+    }
+
+    #boss {
+        width: 120px;
+        height: 150px;
+    }
+
+    .bottom {
+        min-height: 70px;
+    }
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="game" id="game">
+
+    <div class="boss-label">
+        ⚠ BOSS FIGHT ⚠
+    </div>
+
+    <h1>
+        КАНАТЕЛЛО
+    </h1>
+
+
+    <!-- HP -->
+
+    <div class="hp-wrapper">
+
+        <div class="hp-text">
+
+            HP:
+            <span id="hpNumber">1000</span>
+            / 1000
+
+        </div>
+
+        <div class="hp-bar">
+            <div id="hp"></div>
+        </div>
+
+    </div>
+
+
+    <!-- АРЕНА -->
+
+    <div class="arena" id="arena">
+
+        <img
+            id="boss"
+            src="/kanatello.jpg"
+            alt="Канателло"
+        >
+
+    </div>
+
+
+    <!-- НИЗ -->
+
+    <div class="bottom">
+
+        <div id="message">
+            ПОПРОБУЙ ПОПАСТЬ ПО КАНАТЕЛЛО
+        </div>
+
+        <button id="reset">
+            ♻️ ВОСКРЕСИТЬ КАНАТЕЛЛО
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ПЛЕТКА -->
+
+<div id="whip">
+    〰️
+</div>
+
+
+<script>
+
+/* =========================
+   НАСТРОЙКИ
+========================= */
+
+const MAX_HP = 1000;
+
+/*
+   Скорость Канателло.
+
+   Поставь:
+   1.5 = медленно
+   3   = нормально
+   5   = быстро
+   8   = безумие
+*/
+
+const SPEED = 3;
+
+
+/* =========================
+   ЭЛЕМЕНТЫ
+========================= */
+
+const arena =
+    document.getElementById("arena");
+
+const boss =
+    document.getElementById("boss");
+
+const hpBar =
+    document.getElementById("hp");
+
+const hpNumber =
+    document.getElementById("hpNumber");
+
+const message =
+    document.getElementById("message");
+
+const game =
+    document.getElementById("game");
+
+const whip =
+    document.getElementById("whip");
+
+const resetButton =
+    document.getElementById("reset");
+
+
+/* =========================
+   СОСТОЯНИЕ
+========================= */
+
+let hp = MAX_HP;
+
+let x = 100;
+let y = 100;
+
+let velocityX = SPEED;
+let velocityY = SPEED;
+
+let alive = true;
+
+
+/* =========================
+   ДВИЖЕНИЕ
+========================= */
+
+function moveBoss() {
+
+    if (alive) {
+
+        const arenaWidth =
+            arena.clientWidth;
+
+        const arenaHeight =
+            arena.clientHeight;
+
+        const bossWidth =
+            boss.offsetWidth;
+
+        const bossHeight =
+            boss.offsetHeight;
+
+
+        x += velocityX;
+        y += velocityY;
+
+
+        /* удар об левую/правую стену */
+
+        if (
+            x <= 0 ||
+            x + bossWidth >= arenaWidth
+        ) {
+
+            velocityX *= -1;
+
+            x = Math.max(
+                0,
+                Math.min(
+                    x,
+                    arenaWidth - bossWidth
+                )
+            );
+        }
+
+
+        /* удар об верх/низ */
+
+        if (
+            y <= 0 ||
+            y + bossHeight >= arenaHeight
+        ) {
+
+            velocityY *= -1;
+
+            y = Math.max(
+                0,
+                Math.min(
+                    y,
+                    arenaHeight - bossHeight
+                )
+            );
+        }
+
+
+        boss.style.left =
+            x + "px";
+
+        boss.style.top =
+            y + "px";
+
+        boss.style.transform =
+            "none";
+    }
+
+
+    requestAnimationFrame(moveBoss);
+}
+
+
+/* =========================
+   СЛУЧАЙНАЯ СМЕНА
+   НАПРАВЛЕНИЯ
+========================= */
+
+setInterval(() => {
+
+    if (!alive)
+        return;
+
+    /*
+       Иногда Канателло внезапно
+       меняет направление.
+    */
+
+    if (Math.random() < 0.55) {
+
+        velocityX =
+            (Math.random() > 0.5 ? 1 : -1)
+            *
+            (SPEED + Math.random() * 2);
+
+        velocityY =
+            (Math.random() > 0.5 ? 1 : -1)
+            *
+            (SPEED + Math.random() * 2);
+    }
+
+}, 700);
+
+
+/* =========================
+   УДАР
+========================= */
+
+boss.addEventListener(
+    "click",
+    function(event) {
+
+        if (!alive)
+            return;
+
+
+        /* случайный урон */
+
+        const damage =
+            Math.floor(
+                Math.random() * 70
+            ) + 30;
+
+
+        hp -= damage;
+
+        if (hp < 0)
+            hp = 0;
+
+
+        /* HP */
+
+        hpNumber.textContent =
+            hp;
+
+        hpBar.style.width =
+            (hp / MAX_HP * 100)
+            + "%";
+
+
+        /* ПЛЕТКА */
+
+        whip.style.left =
+            event.clientX + "px";
+
+        whip.style.top =
+            event.clientY + "px";
+
+        whip.classList.remove(
+            "attack"
+        );
+
+        void whip.offsetWidth;
+
+        whip.classList.add(
+            "attack"
+        );
+
+
+        /* DAMAGE */
+
+        const arenaRect =
+            arena.getBoundingClientRect();
+
+        const damageText =
+            document.createElement("div");
+
+        damageText.className =
+            "damage";
+
+        damageText.textContent =
+            "-" + damage + " HP";
+
+        damageText.style.left =
+            (
+                event.clientX -
+                arenaRect.left
+            ) + "px";
+
+        damageText.style.top =
+            (
+                event.clientY -
+                arenaRect.top
+            ) + "px";
+
+        arena.appendChild(
+            damageText
+        );
+
+
+        setTimeout(() => {
+
+            damageText.remove();
+
+        }, 800);
+
+
+        /* эффект попадания */
+
+        boss.classList.add("hit");
+
+        setTimeout(() => {
+
+            boss.classList.remove("hit");
+
+        }, 100);
+
+
+        /* тряска */
+
+        game.classList.remove(
+            "shake"
+        );
+
+        void game.offsetWidth;
+
+        game.classList.add(
+            "shake"
+        );
+
+
+        /* после попадания
+           Канателло резко убегает */
+
+        velocityX =
+            (Math.random() > 0.5 ? 1 : -1)
+            *
+            (SPEED + Math.random() * 4);
+
+        velocityY =
+            (Math.random() > 0.5 ? 1 : -1)
+            *
+            (SPEED + Math.random() * 4);
+
+
+        /* фразы */
+
+        const phrases = [
+
+            "КАНАТЕЛЛО ПОЛУЧАЕТ УРОН 💥",
+
+            "КАНАТЕЛЛО: ТЫ ЧЕГО",
+
+            "КРИТИЧЕСКИЙ УДАР",
+
+            "КАНАТЕЛЛО ПЫТАЕТСЯ СБЕЖАТЬ",
+
+            "COMBO +1",
+
+            "ПОПАДАНИЕ 🎯",
+
+            "БРОНЯ КАНАТЕЛЛО НЕ ПОМОГЛА",
+
+            "КАНАТЕЛЛО УСКОРЯЕТСЯ"
+
+        ];
+
+
+        message.textContent =
+            phrases[
+                Math.floor(
+                    Math.random()
+                    *
+                    phrases.length
+                )
+            ];
+
+
+        /* СМЕРТЬ */
+
+        if (hp === 0) {
+
+            alive = false;
+
+            velocityX = 0;
+            velocityY = 0;
+
+            boss.classList.add(
+                "dead"
+            );
+
+            hpBar.style.background =
+                "#333";
+
+            message.textContent =
+                "💀 КАНАТЕЛЛО ПОВЕРЖЕН 💀";
+        }
+
+    }
+);
+
+
+/* =========================
+   RESET
+========================= */
+
+resetButton.addEventListener(
+    "click",
+    function() {
+
+        hp = MAX_HP;
+
+        alive = true;
+
+        hpNumber.textContent =
+            MAX_HP;
+
+        hpBar.style.width =
+            "100%";
+
+        hpBar.style.background =
+            "linear-gradient(90deg, #9d0000, #ff3030)";
+
+        boss.classList.remove(
+            "dead"
+        );
+
+
+        /* ставим Канателло
+           в случайное место */
+
+        const maxX =
+            Math.max(
+                0,
+                arena.clientWidth -
+                boss.offsetWidth
+            );
+
+        const maxY =
+            Math.max(
+                0,
+                arena.clientHeight -
+                boss.offsetHeight
+            );
+
+        x =
+            Math.random() * maxX;
+
+        y =
+            Math.random() * maxY;
+
+
+        velocityX =
+            SPEED *
+            (
+                Math.random() > 0.5
+                ? 1
+                : -1
+            );
+
+        velocityY =
+            SPEED *
+            (
+                Math.random() > 0.5
+                ? 1
+                : -1
+            );
+
+
+        message.textContent =
+            "⚡ КАНАТЕЛЛО ВОЗВРАЩАЕТСЯ ⚡";
+
+    }
+);
+
+
+/* =========================
+   ЗАПУСК
+========================= */
+
+boss.addEventListener(
+    "load",
+    function() {
+
+        const maxX =
+            Math.max(
+                0,
+                arena.clientWidth -
+                boss.offsetWidth
+            );
+
+        const maxY =
+            Math.max(
+                0,
+                arena.clientHeight -
+                boss.offsetHeight
+            );
+
+        x =
+            Math.random() * maxX;
+
+        y =
+            Math.random() * maxY;
+
+        moveBoss();
+
+    }
+);
+
+</script>
+
+</body>
+</html>
